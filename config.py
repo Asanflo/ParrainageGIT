@@ -34,3 +34,10 @@ class Config:
     # Sécurité & API
     # =========================
     JSON_SORT_KEYS = False
+
+    # =========================
+    # CORS
+    # =========================
+    # URL(s) autorisée(s) pour le frontend
+    # Exemple: FRONTEND_URL=https://mon-frontend.vercel.app
+    CORS_ORIGINS = os.getenv("FRONTEND_URL", "*")  # "*" pour autoriser toutes les origines (dev uniquement)
