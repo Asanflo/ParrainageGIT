@@ -18,8 +18,6 @@ def create_app():
     jwt.init_app(app)
 
 
-    with app.app_context():
-        upgrade()  #Pour monter automatiquement la BD
     CORS(app, resources={r"/api/*": {"origins": app.config['CORS_ORIGINS']}})
 
     app.register_blueprint(auth_bp)
