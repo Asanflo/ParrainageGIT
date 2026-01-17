@@ -71,10 +71,6 @@ class Student(db.Model):
         except Exception:
             return {}
 
-    def get_whatsapp_link(self):
-        if not self.telephone:
-            return None
-        return f"https://wa.me/{self.telephone}"
 
 #Classe Assignation mentor
 class MentorAssignment(db.Model):

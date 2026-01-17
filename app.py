@@ -6,6 +6,7 @@ from extensions import db, migrate, jwt
 from routes.auth import auth_bp
 from routes.student import student_bp
 from routes.mentor import mentor_bp
+from routes.surprise import surprise_bp
 
 
 def create_app():
@@ -21,6 +22,7 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(student_bp)
     app.register_blueprint(mentor_bp)
+    app.register_blueprint(surprise_bp)
 
     return app
 
