@@ -20,7 +20,7 @@ def surprise_to_dict(surprise):
 
 
 #====================================
-# CREATE Surprise
+# CREATE SURPRISE - Service
 #====================================
 def create_surprise(data):
     # Recuperer l'utilisateur courant
@@ -67,3 +67,15 @@ def update_surprise(surprise, data, student):
     db.session.commit()
     return surprise
 
+
+# ====================================
+# DELETE SURPRISE - Service
+# ====================================
+def delete_surprise(surprise, student):
+    #Verifier si l'etudiant est du niv 4
+    if student.niveau != 4:
+        raise PermissionError("Seuls les étudiants de niveau 4 peuvent supprimer une surprise")
+
+    db.session.delete(surprise)
+    db.session.commit()
+    return True

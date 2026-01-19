@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import Student, Surprise
-from services.surprise_service import create_surprise, surprise_to_dict, update_surprise
+from services.surprise_service import create_surprise, surprise_to_dict, update_surprise, delete_surprise
 
 surprise_bp = Blueprint("surprise", __name__, url_prefix="/api/surprises")
 
@@ -121,3 +121,31 @@ def list_my_surprises():
     surprises = [surprise_to_dict(s) for s in student.surprises]
 
     return jsonify(surprises), 200
+
+# ------------------------------
+# DELETE surprise
+# ------------------------------
+@surprise_bp.route("/<int:surprise_id>", methods=["DELETE"])
+@jwt_required()
+def delete_surprise_route(surprise_id):
+    """
+    Supprime une surprise.
+
+    Header requis:
+        Authorization: Bearer <JWT_token>
+
+    Conditions:
+        - Seuls les étudiants de niveau 4 peuvent supprimer une surprise.
+    """
+    student_id = get_jwt_identity()
+    student = Student.query.get_or_404(student_id)
+
+    surprise = Surprise.query.get_or_404(surprise_id)
+
+    try:
+        delete_surprise(surprise, student)
+        return jsonify({"msg": "Surprise supprimée avec succès"}), 200
+    except PermissionError as e:
+        return jsonify({"msg": str(e)}), 403
+    except Exception as e:
+        return jsonify({"msg": str(e)}), 500

@@ -89,7 +89,7 @@ class MentorAssignment(db.Model):
         nullable = False
     )
 
-    date_attribution = db.Column(db.DateTime, default=datetime.utcnow())
+    date_attribution = db.Column(db.DateTime, default=datetime.utcnow)
     statut = db.Column(
         db.String(20),
         default="actif"
@@ -143,3 +143,4 @@ class Surprise(db.Model):
         "Student",
         back_populates="surprises"
     )
+
