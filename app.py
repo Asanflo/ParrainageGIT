@@ -3,6 +3,8 @@ from flask_cors import CORS
 from config import Config
 from extensions import db, migrate, jwt
 from flask_migrate import upgrade
+
+from routes.admin import admin_bp
 from routes.auth import auth_bp
 from routes.student import student_bp
 from routes.mentor import mentor_bp
@@ -24,6 +26,7 @@ def create_app():
     app.register_blueprint(student_bp)
     app.register_blueprint(mentor_bp)
     app.register_blueprint(surprise_bp)
+    app.register_blueprint(admin_bp)
 
     return app
 

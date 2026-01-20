@@ -144,3 +144,10 @@ class Surprise(db.Model):
         back_populates="surprises"
     )
 
+#Pour gerer l'etat de l'assignation des parains
+class SystemState(db.Model):
+    __tablename__ = "system_state"
+
+    id = db.Column(db.Integer, primary_key=True)
+    mentors_assigned = db.Column(db.Boolean, default=False, nullable=False)
+    executed_at = db.Column(db.DateTime)

@@ -32,6 +32,11 @@ class Config:
     JSON_SORT_KEYS = False
 
     # =========================
+    # Sécurité système
+    # =========================
+    SYSTEM_ASSIGN_KEY = os.getenv("SYSTEM_ASSIGN_KEY")
+
+    # =========================
     # CORS
     # =========================
     # URL(s) autorisée(s) pour le frontend
