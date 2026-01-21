@@ -43,6 +43,7 @@ def create_student(data):
     )
     db.session.add(student)
     db.session.commit()
+    db.session.refresh(student)
     return student
 
 # ------------------------------
