@@ -14,64 +14,44 @@ import secrets
 def import_students_from_excel(file_path):
     df = pd.read_excel(file_path)
 
-    required_columns = ["Matricule", "Noms", "Filière", "Niveau"]
-    for col in required_columns:
-        if col not in df.columns:
-            raise ValueError(f"Colonne manquante dans le fichier: {col}")
-
     created_students = []
 
-    # Récupérer TOUS les matricules existants (1 seule requête)
-    existing_matricules = {
-        m.strip()
-        for (m,) in db.session.query(Student.matricule).all()
-    }
-
-    students_to_add = []
-
-    for _, row in df.iterrows():
-        matricule = row.get("Matricule")
-
-        if pd.isna(matricule) or str(matricule).strip() == "":
-            continue
-
-        matricule = str(matricule).strip()
-
-        if matricule in existing_matricules:
-            continue
-
-        token_brut = secrets.token_urlsafe(8)
-
-        student = Student(
-            matricule=matricule,
-            token=token_brut,
-            password_hash=generate_password_hash(
-                token_brut,
-                method="pbkdf2:sha256"
-            ),
-            nom_complet=row["Noms"],
-            niveau=int(row["Niveau"]),
-            filiere=row["Filière"],
-            telephone="",
-            competences="[]",
-            centres_interet="[]",
-            reseaux_sociaux="{}",
-        )
-
-        students_to_add.append(student)
-        existing_matricules.add(matricule)
-
     try:
-        db.session.bulk_save_objects(students_to_add)
+        for _, row in df.iterrows():
+            matricule = row.get("Matricule")
+
+            if not matricule or pd.isna(matricule) or matricule.strip() == "":
+                continue
+
+            matricule = matricule.strip()
+
+            if Student.query.filter_by(matricule=matricule).first():
+                continue
+
+            student = Student(
+                matricule=matricule,
+                token=secrets.token_urlsafe(8),
+                password_hash=generate_password_hash(matricule),
+                nom_complet=row["Noms"],
+                niveau=int(row["Niveau"]),
+                filiere=row["Filière"],
+                competences="[]",
+                centres_interet="[]",
+                reseaux_sociaux="{}",
+            )
+
+            db.session.add(student)
+            created_students.append(student)
+
+        # ✅ UN SEUL COMMIT
         db.session.commit()
+
     except Exception as e:
         db.session.rollback()
         raise e
 
-    return {
-        "created": len(students_to_add),
-        "students": [s.matricule for s in students_to_add]
-    }
+    return created_students
+
 
 
 
