@@ -46,7 +46,7 @@ def import_students_from_excel(file_path):
             created_students.append(student_to_dict(student))
 
         # ✅ UN SEUL COMMIT
-        db.session.commit()
+        # db.session.commit()
 
     except Exception as e:
         db.session.rollback()

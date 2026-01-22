@@ -42,8 +42,6 @@ def create_student(data):
         reseaux_sociaux=json.dumps(data.get("reseaux_sociaux", {})),
     )
     db.session.add(student)
-    db.session.commit()
-    db.session.refresh(student)
     return student
 
 # ------------------------------
