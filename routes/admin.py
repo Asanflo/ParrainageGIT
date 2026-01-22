@@ -2,6 +2,7 @@ from flask import Blueprint, request, current_app, jsonify, send_file
 import pandas as pd
 from io import BytesIO
 
+from extensions import db
 from models import Student
 from scripts.import_student import import_students_from_excel
 
@@ -20,6 +21,7 @@ def import_students():
 
     try:
         created_students = import_students_from_excel(EXCEL_FILE)
+        db.session.commit()
         return jsonify({
             "message": f"{len(created_students)} étudiants créés",
             "students": created_students
