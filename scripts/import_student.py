@@ -4,11 +4,13 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pandas as pd
+from sqlalchemy import func
 from extensions import db
 from models import Student
-from services.student_service import create_student, student_to_dict
+from werkzeug.security import generate_password_hash
+import secrets
 
-#Script permettant d'ajouter atomatiquement les etudiants
+
 def import_students_from_excel(file_path):
     df = pd.read_excel(file_path)
 
@@ -19,41 +21,58 @@ def import_students_from_excel(file_path):
 
     created_students = []
 
-    # Trouver le dernier numéro existant dans la base
-    last_student = Student.query.order_by(Student.id.desc()).first()
-    if last_student and last_student.matricule.startswith("26PG"):
-        last_num = int(last_student.matricule[-4:])
-    else:
-        last_num = 0
+    # Récupérer TOUS les matricules existants (1 seule requête)
+    existing_matricules = {
+        m.strip()
+        for (m,) in db.session.query(Student.matricule).all()
+    }
+
+    students_to_add = []
 
     for _, row in df.iterrows():
         matricule = row.get("Matricule")
 
-        if not matricule or pd.isna(matricule) or matricule.strip() == "":
-            last_num += 1
-            matricule = f"26PG{last_num:04d}"
-
-        if Student.query.filter_by(matricule=matricule).first():
+        if pd.isna(matricule) or str(matricule).strip() == "":
             continue
 
-        student_data = {
-            "nom_complet": row["Noms"],
-            "matricule": matricule,
-            "niveau": int(row["Niveau"]),
-            "filiere": row["Filière"],
-            "telephone": row.get("telephone", ""),
-            "competences": [],
-            "centres_interet": [],
-            "reseaux_sociaux": {},
-        }
-        student = create_student(student_data)
-        created_students.append(student_to_dict(student))
+        matricule = str(matricule).strip()
 
-    print(f"{len(created_students)} étudiants créés")
-    for s in created_students:
-        print(s)
+        if matricule in existing_matricules:
+            continue
 
-    return created_students
+        token_brut = secrets.token_urlsafe(8)
+
+        student = Student(
+            matricule=matricule,
+            token=token_brut,
+            password_hash=generate_password_hash(
+                token_brut,
+                method="pbkdf2:sha256"
+            ),
+            nom_complet=row["Noms"],
+            niveau=int(row["Niveau"]),
+            filiere=row["Filière"],
+            telephone="",
+            competences="[]",
+            centres_interet="[]",
+            reseaux_sociaux="{}",
+        )
+
+        students_to_add.append(student)
+        existing_matricules.add(matricule)
+
+    try:
+        db.session.bulk_save_objects(students_to_add)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        raise e
+
+    return {
+        "created": len(students_to_add),
+        "students": [s.matricule for s in students_to_add]
+    }
+
 
 
 
