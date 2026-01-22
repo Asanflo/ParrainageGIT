@@ -6,7 +6,7 @@ from models import Student
 from scripts.import_student import import_students_from_excel
 
 admin_bp = Blueprint("admin_bp", __name__)
-EXCEL_FILE = "scripts/List_6.xlsx"
+EXCEL_FILE = "scripts/List_7.xlsx"
 
 # ------------------------------
 # SAVE students from excel file
