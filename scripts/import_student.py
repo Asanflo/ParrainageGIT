@@ -1,6 +1,8 @@
 import sys
 import os
 
+from services.student_service import student_to_dict
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pandas as pd
@@ -41,7 +43,7 @@ def import_students_from_excel(file_path):
             )
 
             db.session.add(student)
-            created_students.append(student)
+            created_students.append(student_to_dict(student))
 
         # ✅ UN SEUL COMMIT
         db.session.commit()
