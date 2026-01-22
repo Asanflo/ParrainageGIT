@@ -1,56 +1,54 @@
 import sys
 import os
-
-from services.student_service import student_to_dict
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import pandas as pd
-from sqlalchemy import func
 from extensions import db
 from models import Student
-from werkzeug.security import generate_password_hash
-import secrets
+from services.student_service import create_student, student_to_dict
 
 
+#Script permettant d'ajouter atomatiquement les etudiants
 def import_students_from_excel(file_path):
     df = pd.read_excel(file_path)
+    required_columns = ["Matricule", "Noms", "Filière", "Niveau"]
+    for col in required_columns:
+        if col not in df.columns:
+            raise ValueError(f"Colonne manquante dans le fichier: {col}")
 
     created_students = []
+    # Trouver le dernier numéro existant dans la base
+    last_student = Student.query.order_by(Student.id.desc()).first()
+    if last_student and last_student.matricule.startswith("26PG"):
+        last_num = int(last_student.matricule[-4:])
+    else:
+        last_num = 0
 
-    try:
-        for _, row in df.iterrows():
-            matricule = row.get("Matricule")
+    for _, row in df.iterrows():
+        matricule = row.get("Matricule")
+        if not matricule or pd.isna(matricule) or matricule.strip() == "":
+            last_num += 1
+            matricule = f"26PG{last_num:04d}"
 
-            if not matricule or pd.isna(matricule) or matricule.strip() == "":
-                continue
+        if Student.query.filter_by(matricule=matricule).first():
+            continue
 
-            matricule = matricule.strip()
+        student_data = {
+            "nom_complet": str(row["Noms"]).strip(),
+            "matricule": str(matricule).strip(),
+            "niveau": int(row["Niveau"]),
+            "filiere": str(row["Filière"]).strip(),
+            "telephone": str(row.get("telephone", "")).strip(),
+            "competences": [], "centres_interet": [],
+            "reseaux_sociaux": {},
+        }
 
-            if Student.query.filter_by(matricule=matricule).first():
-                continue
+        student = create_student(student_data)
+        created_students.append(student_to_dict(student))
 
-            student = Student(
-                matricule=matricule,
-                token=secrets.token_urlsafe(8),
-                password_hash=generate_password_hash(matricule),
-                nom_complet=row["Noms"],
-                niveau=int(row["Niveau"]),
-                filiere=row["Filière"],
-                competences="[]",
-                centres_interet="[]",
-                reseaux_sociaux="{}",
-            )
+    print(f"{len(created_students)} étudiants créés")
 
-            db.session.add(student)
-            created_students.append(student_to_dict(student))
-
-        # ✅ UN SEUL COMMIT
-        # db.session.commit()
-
-    except Exception as e:
-        db.session.rollback()
-        raise e
+    for s in created_students:
+        print(s)
 
     return created_students
 

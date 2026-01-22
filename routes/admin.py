@@ -2,7 +2,6 @@ from flask import Blueprint, request, current_app, jsonify, send_file
 import pandas as pd
 from io import BytesIO
 
-from extensions import db
 from models import Student
 from scripts.import_student import import_students_from_excel
 
@@ -21,7 +20,6 @@ def import_students():
 
     try:
         created_students = import_students_from_excel(EXCEL_FILE)
-        db.session.commit()
         return jsonify({
             "message": f"{len(created_students)} étudiants créés",
             "students": created_students
@@ -32,7 +30,7 @@ def import_students():
 # ------------------------------
 # IMPORT students to csv file
 # ------------------------------
-"""
+
 @admin_bp.route("/export-students", methods=["GET"])
 def export_students_endpoint():
     filiere = request.args.get("filiere")
@@ -65,11 +63,11 @@ def export_students_endpoint():
         as_attachment=True,
         download_name=f"Etudiants_{filiere}_{niveau}.csv"
     )
-"""
-"""
+
+
 @admin_bp.route("/etudiants", methods=["GET"])
 def list_students():
-    #
+    """
     Lister tous les étudiants avec pagination
 
     Query params:
@@ -78,7 +76,7 @@ def list_students():
     - filiere: filtrer par filière
     - niveau: filtrer par niveau
     - search: rechercher dans nom ou matricule
-    #
+    """
     system_key = request.headers.get("X-SYSTEM-KEY")
 
     if not system_key or system_key != current_app.config["SYSTEM_ASSIGN_KEY"]:
@@ -135,4 +133,3 @@ def list_students():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-"""
