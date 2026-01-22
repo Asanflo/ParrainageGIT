@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from werkzeug.security import check_password_hash
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required,get_jwt_identity
 from models import Student
@@ -52,6 +52,7 @@ def login():
     matricule = data.get("matricule")
     password = data.get("password")
 
+    logging.info(f"DB URL: {current_app.config['SQLALCHEMY_DATABASE_URI']}")
     # Vérifier si l'utilisateur existe
     user = Student.query.filter_by(matricule=matricule).first()
     # if not user or not check_password_hash(user.password_hash, password):
