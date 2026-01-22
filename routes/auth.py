@@ -2,7 +2,8 @@ from flask import Blueprint, request, jsonify
 from werkzeug.security import check_password_hash
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required,get_jwt_identity
 from models import Student
-
+import logging
+logging.basicConfig(level=logging.INFO)
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
@@ -53,9 +54,20 @@ def login():
 
     # Vérifier si l'utilisateur existe
     user = Student.query.filter_by(matricule=matricule).first()
-    if not user or not check_password_hash(user.password_hash, password):
+    # if not user or not check_password_hash(user.password_hash, password):
+    #     return jsonify({"msg": "Identifiants invalides"}), 401
+
+    if not user:
+        logging.info("LOGIN FAIL: user not found")
         return jsonify({"msg": "Identifiants invalides"}), 401
 
+    if not check_password_hash(user.password_hash, password):
+        logging.info(
+            f"LOGIN FAIL: hash mismatch | user={user.matricule} | hash={user.password_hash[:20]}"
+        )
+        return jsonify({"msg": "Identifiants invalides"}), 401
+
+    logging.info(f"LOGIN SUCCESS: {user.matricule}")
 
     # Générer tokens
     access_token = create_access_token(identity=str(user.id))

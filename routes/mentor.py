@@ -9,7 +9,7 @@ from services.mentor_service import assign_mentors_randomly
 from services.surprise_service import surprise_to_dict
 from services.student_service import student_to_dict
 
-mentor_bp = Blueprint("mentor", __name__, url_prefix="/mentor")
+mentor_bp = Blueprint("mentor", __name__, url_prefix="/api/mentor")
 
 # ------------------------------
 # Afficher la liste des surprises d'un mentor donne
