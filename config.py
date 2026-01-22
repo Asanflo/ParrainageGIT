@@ -15,7 +15,7 @@ class Config:
     # =========================
     # Base de données PostgreSQL
     # =========================
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")  # <-- Render injecte ça automatiquement
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "postgresql://mentoring_user:odtGYW2ztKpNFn0brbQXos8TI2FDvhdM@dpg-d5lvpq56ubrc73egeg6g-a/mentoring_db_u54g")  # Render injecte ça automatiquement
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # =========================
