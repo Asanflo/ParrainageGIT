@@ -1,16 +1,20 @@
 import random
 from models import Student, MentorAssignment
 from extensions import db
+from collections import defaultdict
 
 def assign_mentors_randomly(commit=True):
     """
         Assigne des mentors de niveau 4 à des mentorees de niveau 3
         par filière de manière aléatoire.
+        Chaque mentor peut avoir au maximum 2 mentees.
     """
     mentors = Student.query.filter_by(niveau=4).all()
     mentorees = Student.query.filter_by(niveau=3).all()
 
-    from collections import defaultdict
+
+
+    # Organiser mentors et mentees par filière
     mentors_by_filiere = defaultdict(list)
     mentorees_by_filiere = defaultdict(list)
 
@@ -29,28 +33,39 @@ def assign_mentors_randomly(commit=True):
         random.shuffle(mentors_f)
         random.shuffle(mentorees_f)
 
-        # 1 mentor → 1 mentoree
-        for mentor, mentoree in zip(mentors_f, mentorees_f):
-            assignment = MentorAssignment(
-                mentor_id=mentor.id,
-                mentee_id=mentoree.id
-            )
-            db.session.add(assignment)
+        # Compter combien de mentees chaque mentor a déjà
+        mentee_count = {mentor.id: len(mentor.mentor_assignments) for mentor in mentors_f}
 
-        # redistribution si surplus
-        remaining = mentorees_f[len(mentors_f):]
-        for mentoree in remaining:
-            mentor = random.choice(mentors_f)
+        # 1. Assigner 1 mentee à chaque mentor disponible
+        for mentor, mentoree in zip(mentors_f, mentorees_f):
+            if mentee_count[mentor.id] < 2:
+                assignment = MentorAssignment(
+                    mentor_id=mentor.id,
+                    mentee_id=mentoree.id
+                )
+                db.session.add(assignment)
+                mentee_count[mentor.id] += 1
+
+        # 2. Redistribuer le reste en respectant la limite de 2 mentees par mentor
+        remaining_mentees = mentorees_f[len(mentors_f):]
+        for mentoree in remaining_mentees:
+            # choisir un mentor qui n'a pas encore 2 mentees
+            available_mentors = [m for m in mentors_f if mentee_count[m.id] < 2]
+            if not available_mentors:
+                break  # plus de mentor disponible
+            mentor = random.choice(available_mentors)
             assignment = MentorAssignment(
                 mentor_id=mentor.id,
                 mentee_id=mentoree.id
             )
             db.session.add(assignment)
+            mentee_count[mentor.id] += 1
 
     if commit:
         db.session.commit()
 
     return True
+
 
 
 # def assign_mentors_randomly():
